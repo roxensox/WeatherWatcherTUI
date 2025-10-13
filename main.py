@@ -1,26 +1,29 @@
 import requests, os, classes, time, curses
 from dotenv import load_dotenv
+from curses import wrapper
 
 
-def main():
+# FIXME: Incorporate printer with curses interface in interface.py
+def main(stdscr):
     load_dotenv()
-    location = input("Set Location: ")
     cfg = classes.Config(os.getenv("API_KEY"))
+    location = "58401"
     cfg.set_location(location)
+    cfg.screen = stdscr
+    stdscr.addstr(0, 0, "Set Location: ")
+    stdscr.refresh()
+    stdscr.getch()
     prntr = classes.Printer()
     while True:
-        try:
-            weather = cfg.get_weather()
-            if weather == None:
-                break
-            prntr.load_data(weather)
-            prntr.output_data()
-            time.sleep(30)
-        except:
-            print("Invalid location")
-            location = input("Set Location: ")
-            cfg.set_location(location)
+        stdscr.clear()
+        stdscr.addstr("Test")
+        weather = cfg.get_weather()
+        if weather == None:
+            break
+        prntr.load_data(weather)
+        prntr.output_data()
+        time.sleep(30)
 
 
 if __name__ == "__main__":
-    main()
+    wrapper(main)

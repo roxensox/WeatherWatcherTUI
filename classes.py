@@ -1,4 +1,4 @@
-import requests
+import requests, curses
 
 
 class Config:
@@ -109,7 +109,9 @@ class Printer:
         for s in strings:
             spacer = " " * ((max(lengths) - len(s)) + 1)
             if tick == True:
-                print(s, end=spacer)
+                pass
+                #print(s, end=spacer)
             else:
-                print(s)
+                pass
+                #print(s)
             tick = not tick
