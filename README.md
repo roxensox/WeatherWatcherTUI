@@ -4,6 +4,8 @@ A TUI for keeping an eye on the weather. Can be configured to update at any inte
 ## Dependencies
 - UV
 - Python 3.1X
+- Python `dotenv` package
+- Python `requests` package
 - Terminal with UTF-8 font
 - Have not tested for Windows, but works on MacOS and probably Linux
 
