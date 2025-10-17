@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from curses import wrapper
 
 
-# FIXME: Incorporate printer with curses interface in interface.py
 def main(stdscr):
     load_dotenv()
     cfg = processing.Config(os.getenv("API_KEY"))

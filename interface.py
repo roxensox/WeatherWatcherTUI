@@ -1,4 +1,4 @@
-import sys,os
+import sys,os,time
 import _curses, curses
 import processing as p
 
@@ -8,16 +8,28 @@ def main_interface(stdscr: _curses.window, cfg):
     k = ''
     mainscreen = MainInterface(screen=stdscr)
     mainscreen.draw()
+    mainscreen.screen.nodelay(True)
     location = mainscreen.get_location()
     mainscreen.screen.addstr(1, 1, location)
     mainscreen.draw()
     cfg.set_location(location)
     data = printer.load_data(cfg.get_weather())
     mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
+    last_refresh = time.time()
+    refresh_interval = 5
+    data = printer.load_data(cfg.get_weather())
+    mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
+    mainscreen.screen.move(mainscreen.height - 1, 0)
     while k != ord('q'):
+        k = mainscreen.screen.getch()
         if curses.is_term_resized(mainscreen.height, mainscreen.width):
             mainscreen.resize_handler()
-        k = stdscr.getch()
+        now = time.time()
+        if now - last_refresh >= refresh_interval:
+            data = printer.load_data(cfg.get_weather())
+            mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
+            last_refresh = now
+        time.sleep(0.05)
 
 
 class Interface:
@@ -160,9 +172,10 @@ class MainInterface (Interface):
 
     def display_location_info(self, data: dict, heading: str)->None:
         screen = curses.newwin(len(data) + 3, max([len(": ".join(i)) for i in data]) + 2, 1, 1)
-        test = InfoInterface(screen=screen, data=data, heading=heading, parent=self)
-        test.draw_info()
-        self.children.append(test)
+        infoScreen1 = InfoInterface(screen=screen, data=data, heading=heading, parent=self)
+        infoScreen1.draw_info()
+        self.screen.move(self.height - 1, 0)
+        self.children.append(infoScreen1)
 
 
     def get_location(self)->str:
@@ -198,6 +211,7 @@ class InfoInterface (Interface):
         for k in self.data:
             self.screen.addstr(cy, cx, f"{k[0]}: {k[1]}")
             cy += 1
+        curses.curs_set(0)
         self.screen.refresh()
 
     def draw_info(self):
