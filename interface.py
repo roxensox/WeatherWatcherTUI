@@ -1,14 +1,19 @@
 import sys,os
 import _curses, curses
+import processing as p
 
 
-def main_interface(stdscr: _curses.window):
+def main_interface(stdscr: _curses.window, cfg):
+    printer = p.Printer()
     k = ''
     mainscreen = MainInterface(screen=stdscr)
     mainscreen.draw()
     location = mainscreen.get_location()
-    #mainscreen.screen.addstr(10, 10, location)
+    mainscreen.screen.addstr(1, 1, location)
     mainscreen.draw()
+    cfg.set_location(location)
+    data = printer.load_data(cfg.get_weather())
+    mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
     while k != ord('q'):
         if curses.is_term_resized(mainscreen.height, mainscreen.width):
             mainscreen.resize_handler()
@@ -16,14 +21,17 @@ def main_interface(stdscr: _curses.window):
 
 
 class Interface:
-    def __init__(self, screen: _curses.window, y: int =0, x: int =0, parent = None)->None:
+    def __init__(self, screen: _curses.window, y: int =0, x: int =0, parent = None, heading: str = "")->None:
         self.screen = screen
         max_y, max_x = screen.getmaxyx()
+        self.original_width = max_x
         self.height = max_y
         self.width = max_x
         self.anchor_y = y
         self.anchor_x = x
         self.parent = parent
+        self.heading = heading
+        self.children = []
 
         # These are declared inside of the class so they can be 
         # modified / cleared in inheriting classes
@@ -36,49 +44,70 @@ class Interface:
 
 
     def resize_handler(self):
+        '''
+        Resizes windows when the terminal is resized
+        '''
+
+        # Handler for the main window
         if self.parent is None:
             curses.update_lines_cols()
             newy, newx = self.screen.getmaxyx()
             curses.resizeterm(newy, newx)
             self.screen.resize(newy, newx)
             self.height, self.width = newy, newx
+            self.screen.clear()
+            self.draw()
+            for i in self.children:
+                i.resize_handler()
+                i.draw()
+        # Handler for all sub-windows
         else:
-            newy, newx = self.screen.getmaxyx()
-            curses.resizeterm(newy, newx)
-            self.height, self.width = newy, newx
-            self.screen = curses.newwin(self.height, self.width, 0, 0)
-        self.screen.clear()
-        self.draw()
+            #self.parent.resize_handler()
+            parent_y, parent_x = self.parent.height, self.parent.width
+            new_height = min(self.height, parent_y - self.anchor_y - 1)
+            new_width = min(self.width, parent_x - self.anchor_x - 1)
+            if parent_x > self.original_width + 2:
+                new_width = self.original_width
+
+            try:
+                self.screen = curses.newwin(
+                    new_height,
+                    new_width,
+                    self.anchor_y,
+                    self.anchor_x,
+                )
+                self.height, self.width = new_height, new_width
+                self.screen.clear()
+                self.draw()
+            except curses.error:
+                pass
 
 
     def draw(self)->None:
-        '''
-        Draws a box for the perimeter of the interface
-        '''
-        cy, cx = self.anchor_y, 0
-        self.screen.addch(cy, cx, self.ul_corner)
-        for i in range(1, self.width - 1):
-            self.screen.addch(cy, cx + i, self.horizontal)
+        cy = 0
+        self.screen.addch(cy, 0, self.ul_corner)
+        self.screen.addstr(self.heading)
+        for i in range(len(self.heading) + 1, self.width - 1):
+            self.screen.addch(cy,i,self.horizontal)
         self.screen.addch(cy, self.width - 1, self.ur_corner)
-        cy += 1
         while cy < self.height - 2:
-            self.screen.addch(cy, cx, f"{self.vertical}")
-            self.screen.addch(cy, self.width - 1, f"{self.vertical}")
             cy += 1
-        self.screen.addch(cy,cx,self.bl_corner)
+            self.screen.addch(cy, 0, self.vertical)
+            #self.screen.addstr(cy, 1, f"{cy}")
+            self.screen.addch(cy, self.width - 1, self.vertical)
+        self.screen.addch(cy, 0, self.bl_corner)
         for i in range(1, self.width - 1):
-            self.screen.addch(cy, cx + i, self.horizontal)
-            self.screen.refresh()
+            self.screen.addch(cy,i,self.horizontal)
         self.screen.addch(cy, self.width - 1, self.br_corner)
         self.screen.refresh()
 
 
-    def get_string(self, leftBound: int, cy: int)->str:
+    def get_string(self, leftBound: int, cy: int, prompt: str = "")->str:
         '''
         Gets user input string
         '''
         string = ""
-        k = ''
+        k = -1
         cx = leftBound
 
         # This calculates the max length of the string
@@ -86,10 +115,17 @@ class Interface:
         max_length = self.width - leftBound - 3
 
         while k != '\n':
+            self.screen.addstr(cy,1, prompt + string)
+            self.screen.refresh()
             if curses.is_term_resized(self.parent.height, self.parent.width):
                 self.resize_handler()
                 continue
             k = self.screen.getch()
+
+            # Curses reads a resize as this character, so it's skipped
+            if chr(k) == 'ƚ':
+                continue
+
             self.parent.screen.addstr(10,10,chr(k))
             self.parent.screen.refresh()
             if chr(k) == '\u001B' or chr(k) == '\n':
@@ -105,9 +141,6 @@ class Interface:
             else:
                 if len(string) <= max_length:
                     string += chr(k)
-
-            self.screen.addstr(cy,leftBound,string)
-            self.screen.refresh()
         return string
 
 
@@ -125,18 +158,25 @@ class MainInterface (Interface):
         screen.clear()
 
 
+    def display_location_info(self, data: dict, heading: str)->None:
+        screen = curses.newwin(len(data) + 3, max([len(": ".join(i)) for i in data]) + 2, 1, 1)
+        test = InfoInterface(screen=screen, data=data, heading=heading, parent=self)
+        test.draw_info()
+        self.children.append(test)
+
+
     def get_location(self)->str:
         '''
         Prompts the user for location input and returns it as a string
         '''
         # Arguments here are arbitrary, can be modified to taste
-        location_window = self.make_window(5, 50, 1, 2)
+        location_window = self.make_window(4, 50, 1, 1)
         location_window.draw()
         # The coordinates here will depend on arguments to make_window; it just centers the text
-        location_window.screen.addstr(location_window.height // 2, 1, "Set Location: ")
         location_window.screen.refresh()
-        lbound = len("Set Location: ") + 1
-        string = location_window.get_string(leftBound=lbound, cy=location_window.height // 2)
+        prompt = "Set Location: "
+        lbound = len(prompt) + 1
+        string = location_window.get_string(leftBound=lbound, cy=1, prompt=prompt)
         location_window.screen.clear()
         location_window.screen.refresh()
         return string
@@ -147,9 +187,22 @@ class MainInterface (Interface):
 
 
 class InfoInterface (Interface):
-    def __init__(self, screen: _curses.window, data: dict)->None:
+    def __init__(self, screen: _curses.window, data: list, heading: str, parent: MainInterface)->None:
         super().__init__(screen)
         self.data = data
+        self.heading = heading
+
+    def populate(self):
+        cy = 1
+        cx = 1
+        for k in self.data:
+            self.screen.addstr(cy, cx, f"{k[0]}: {k[1]}")
+            cy += 1
+        self.screen.refresh()
+
+    def draw_info(self):
+        self.draw()
+        self.populate()
 
 
 def main():

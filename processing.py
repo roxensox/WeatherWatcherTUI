@@ -1,4 +1,5 @@
-import requests, curses
+import requests, curses, _curses
+from interface import MainInterface
 
 
 class Config:
@@ -97,21 +98,6 @@ class Printer:
                     d1_tier = d_tier[k1]
                     for k2 in k1_tier:
                         if k1_tier[k2][0]:
-                            self.filtered_data.append((k1_tier[k2][1], d1_tier[k2]))
+                            self.filtered_data.append((k1_tier[k2][1], str(d1_tier[k2])))
                 elif k_tier[k1][0]:
-                    self.filtered_data.append((k_tier[k1][1], d_tier[k1]))
-
-
-    def output_data(self)->None:
-        tick = True
-        strings = [f"{i[0]}: {i[1]}" for i in self.filtered_data]
-        lengths = [len(i) for i in strings]
-        for s in strings:
-            spacer = " " * ((max(lengths) - len(s)) + 1)
-            if tick == True:
-                pass
-                #print(s, end=spacer)
-            else:
-                pass
-                #print(s)
-            tick = not tick
+                    self.filtered_data.append((k_tier[k1][1], str(d_tier[k1])))
