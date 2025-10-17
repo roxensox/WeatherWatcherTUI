@@ -2,6 +2,7 @@ import sys,os,time
 import _curses, curses
 import processing as p
 
+LAST_REFRESHED = time.time()
 
 def main_interface(stdscr: _curses.window, cfg):
     printer = p.Printer()
@@ -15,7 +16,7 @@ def main_interface(stdscr: _curses.window, cfg):
     cfg.set_location(location)
     data = printer.load_data(cfg.get_weather())
     mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
-    last_refresh = time.time()
+    LAST_REFRESHED = time.time()
     refresh_interval = 5
     data = printer.load_data(cfg.get_weather())
     mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
@@ -25,10 +26,10 @@ def main_interface(stdscr: _curses.window, cfg):
         if curses.is_term_resized(mainscreen.height, mainscreen.width):
             mainscreen.resize_handler()
         now = time.time()
-        if now - last_refresh >= refresh_interval:
+        if now - LAST_REFRESHED >= refresh_interval:
             data = printer.load_data(cfg.get_weather())
             mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
-            last_refresh = now
+            LAST_REFRESHED = now
         time.sleep(0.05)
 
 
@@ -60,6 +61,8 @@ class Interface:
         Resizes windows when the terminal is resized
         '''
 
+        LAST_REFRESHED = time.time() - 20
+
         # Handler for the main window
         if self.parent is None:
             curses.update_lines_cols()
@@ -69,9 +72,6 @@ class Interface:
             self.height, self.width = newy, newx
             self.screen.clear()
             self.draw()
-            for i in self.children:
-                i.resize_handler()
-                i.draw()
         # Handler for all sub-windows
         else:
             #self.parent.resize_handler()
@@ -209,7 +209,8 @@ class InfoInterface (Interface):
         cy = 1
         cx = 1
         for k in self.data:
-            self.screen.addstr(cy, cx, f"{k[0]}: {k[1]}")
+            self.screen.addstr(cy, cx, f"{k[0]}:")
+            self.screen.addstr(cy, self.width - len(k[1]) - 1, f"{k[1]}")
             cy += 1
         curses.curs_set(0)
         self.screen.refresh()
