@@ -1,7 +1,17 @@
 [project]
-name = "weathercli"
+name = "weatherwatcher"
 version = "0.1.0"
-description = "Add your description here"
+description = "WeatherAPI TUI"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = ["requests", "python-dotenv"]
+
+[project.scripts]
+weatherwatcher="main:launcher"
+
+[build-system]
+requires=["setuptools", "wheel"]
+build-backend="setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["main", "interface", "processing"]

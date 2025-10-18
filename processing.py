@@ -20,10 +20,14 @@ class Config:
         Makes a request to the weather API for the current weather in the specified area, returns it as a dictionary
         '''
         resp = requests.get(f"http://api.weatherapi.com/v1/current.json?key={self.API_Key}&q={self.location}&aqi=no")
-        out = None
+        out = {}
         if resp.status_code <= 299:
             out = resp.json()
+        elif resp.status_code < 200:
+            raise ValueError(f"Code {resp.status_code}: Failed to get data")
         resp.close()
+        if out == None:
+            raise ValueError(f"No data retrieved")
         return out
 
 

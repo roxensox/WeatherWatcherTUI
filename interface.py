@@ -10,11 +10,8 @@ def main_interface(stdscr: _curses.window, cfg):
     mainscreen = MainInterface(screen=stdscr)
     mainscreen.draw()
     mainscreen.screen.nodelay(True)
-    location = mainscreen.get_location()
-    mainscreen.screen.addstr(1, 1, location)
-    mainscreen.draw()
-    cfg.set_location(location)
-    data = printer.load_data(cfg.get_weather())
+    rd = get_valid_location(cfg, mainscreen)
+    data = printer.load_data(rd)
     mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
     LAST_REFRESHED = time.time()
     refresh_interval = 5
@@ -30,7 +27,30 @@ def main_interface(stdscr: _curses.window, cfg):
             data = printer.load_data(cfg.get_weather())
             mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
             LAST_REFRESHED = now
+        if k == ord('r'):
+            mainscreen.screen.clear()
+            mainscreen.screen.refresh()
+            mainscreen.draw()
+            rd = get_valid_location(cfg, mainscreen)
+            data = printer.load_data(rd)
+            mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
+            LAST_REFRESHED = now
         time.sleep(0.05)
+
+
+def get_valid_location(cfg, main):
+    '''
+    Prompts for input and validates it with the API
+    '''
+    rough_data = {}
+    while rough_data.get("location") == None:
+        location = main.get_location()
+        main.screen.addstr(1, 1, location)
+        main.draw()
+        cfg.set_location(location)
+        rough_data = cfg.get_weather()
+    return rough_data
+
 
 
 class Interface:
@@ -138,8 +158,6 @@ class Interface:
             if chr(k) == 'ƚ':
                 continue
 
-            self.parent.screen.addstr(10,10,chr(k))
-            self.parent.screen.refresh()
             if chr(k) == '\u001B' or chr(k) == '\n':
                 break
 
@@ -218,10 +236,3 @@ class InfoInterface (Interface):
     def draw_info(self):
         self.draw()
         self.populate()
-
-
-def main():
-    curses.wrapper(main_interface)
-
-if __name__ == "__main__":
-    main()
