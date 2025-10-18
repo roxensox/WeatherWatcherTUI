@@ -38,8 +38,8 @@ When prompted to enter a location, enter the zip code or city name and press `en
 Once the Weather window is displayed, you can press the `q` key to exit the program, or `r` to reopen the location selection window.
 
 ## Planned Features
+- [x] Ability to change locations
 - [ ] Toggleable Fahrenheit/Celsius option
-- [ ] Ability to change locations
 - [ ] Ability to store previous locations and select them from a dropdown menu
 - [ ] Ability to add new APIs to request from and display data dynamically
 - [ ] Graphics to represent the weather conditions
