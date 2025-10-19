@@ -24,24 +24,30 @@ class Config:
         if resp.status_code <= 299:
             out = resp.json()
         resp.close()
-        if out == {}:
-            raise ValueError(f"No data retrieved")
         return out
 
 
 class Processor:
-    # Class for filtering JSON data
+    '''
+    Class for filtering JSON data
+    '''
     def __init__(self):
         self.prefs = {}
 
 
     def load_data(self, data: dict)->None:
+        '''
+        Loads a JSON dictionary into a list of key/pair tuples
+        '''
+
         self.filtered_data = []
         self.filtered_data = self.filter_data_recursive(self.prefs, data, self.filtered_data)
 
 
     def filter_data_recursive(self, prefs: dict, data: dict, history: list)->list:
-        # Filters data recursively and will work on any JSON with compatible prefs
+        '''
+        Filters data recursively and will work on any JSON with compatible prefs
+        '''
 
         for k in prefs.keys():
             # Checks for corresponding value in data dict, skips key if it's not there
@@ -60,6 +66,7 @@ class WeatherProcessor (Processor):
     # Processor subclass for displaying WeatherAPI information
     def __init__(self):
         super().__init__()
+        self.title = "Weather"
         self.prefs = {
             "location": {
                 "name":(True,"City"),

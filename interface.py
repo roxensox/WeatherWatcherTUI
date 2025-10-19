@@ -8,16 +8,15 @@ def main_interface(stdscr: _curses.window, cfg):
     wp = p.WeatherProcessor()
     k = ''
     mainscreen = MainInterface(screen=stdscr)
-    mainscreen.draw()
     mainscreen.screen.nodelay(True)
-    rd = get_valid_location(cfg, mainscreen)
-    data = wp.load_data(rd)
+    data = wp.load_data(get_valid_location(cfg, mainscreen))
     mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
     LAST_REFRESHED = time.time()
     refresh_interval = 5
     data = wp.load_data(cfg.get_weather())
     mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
-    mainscreen.screen.move(mainscreen.height - 1, 0)
+    curses.curs_set(0)
+
     while k != ord('q'):
         k = mainscreen.screen.getch()
         if curses.is_term_resized(mainscreen.height, mainscreen.width):
@@ -25,7 +24,7 @@ def main_interface(stdscr: _curses.window, cfg):
         now = time.time()
         if now - LAST_REFRESHED >= refresh_interval:
             data = wp.load_data(cfg.get_weather())
-            mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
+            mainscreen.display_location_info(data=wp.filtered_data, heading=wp.title)
             LAST_REFRESHED = now
         if k == ord('r'):
             mainscreen.screen.clear()
@@ -186,6 +185,7 @@ class MainInterface (Interface):
         curses.start_color()
         curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
         screen.clear()
+        self.draw()
 
 
     def display_location_info(self, data: dict, heading: str)->None:
@@ -230,7 +230,6 @@ class InfoInterface (Interface):
             self.screen.addstr(cy, cx, f"{k[0]}:")
             self.screen.addstr(cy, self.width - len(k[1]) - 1, f"{k[1]}")
             cy += 1
-        curses.curs_set(0)
         self.screen.refresh()
 
     def draw_info(self):
