@@ -34,6 +34,9 @@ def main_interface(stdscr: _curses.window, cfg):
             data = wp.load_data(rd)
             mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
             LAST_REFRESHED = now
+        if k == ord('m'):
+            menu = MenuInterface(parent=mainscreen, heading = "Menu")
+            menu.draw()
         time.sleep(0.05)
 
 
@@ -124,7 +127,6 @@ class Interface:
         while cy < self.height - 2:
             cy += 1
             self.screen.addch(cy, 0, self.vertical)
-            #self.screen.addstr(cy, 1, f"{cy}")
             self.screen.addch(cy, self.width - 1, self.vertical)
         self.screen.addch(cy, 0, self.bl_corner)
         for i in range(1, self.width - 1):
@@ -235,3 +237,22 @@ class InfoInterface (Interface):
     def draw_info(self):
         self.draw()
         self.populate()
+
+
+class MenuInterface (Interface):
+    def __init__(self, parent: MainInterface, heading: str = "")->None:
+        height = 7
+        width = 40
+        new_screen = curses.newwin(height, width, (parent.height // 2) - height // 2, (parent.width // 2) - width // 2)
+        super().__init__(screen=new_screen, parent=parent)
+        self.options = set()
+
+        self.option_y = 4
+        self.option_x = 0
+
+        self.heading = heading
+
+
+    def add_option(self, name: str)->None:
+        self.options.add(name)
+        self.option_x = min([len(i) for i in self.options]) + 4
