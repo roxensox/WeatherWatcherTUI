@@ -5,18 +5,18 @@ import processing as p
 LAST_REFRESHED = time.time()
 
 def main_interface(stdscr: _curses.window, cfg):
-    printer = p.Printer()
+    wp = p.WeatherProcessor()
     k = ''
     mainscreen = MainInterface(screen=stdscr)
     mainscreen.draw()
     mainscreen.screen.nodelay(True)
     rd = get_valid_location(cfg, mainscreen)
-    data = printer.load_data(rd)
-    mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
+    data = wp.load_data(rd)
+    mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
     LAST_REFRESHED = time.time()
     refresh_interval = 5
-    data = printer.load_data(cfg.get_weather())
-    mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
+    data = wp.load_data(cfg.get_weather())
+    mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
     mainscreen.screen.move(mainscreen.height - 1, 0)
     while k != ord('q'):
         k = mainscreen.screen.getch()
@@ -24,16 +24,16 @@ def main_interface(stdscr: _curses.window, cfg):
             mainscreen.resize_handler()
         now = time.time()
         if now - LAST_REFRESHED >= refresh_interval:
-            data = printer.load_data(cfg.get_weather())
-            mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
+            data = wp.load_data(cfg.get_weather())
+            mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
             LAST_REFRESHED = now
         if k == ord('r'):
             mainscreen.screen.clear()
             mainscreen.screen.refresh()
             mainscreen.draw()
             rd = get_valid_location(cfg, mainscreen)
-            data = printer.load_data(rd)
-            mainscreen.display_location_info(data=printer.filtered_data, heading="Weather")
+            data = wp.load_data(rd)
+            mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
             LAST_REFRESHED = now
         time.sleep(0.05)
 
