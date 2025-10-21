@@ -6,13 +6,12 @@ from curses import wrapper
 
 
 def main(stdscr):
-    load_dotenv(Path.home() / ".weatherwatcher" / ".env")
-    cfg = p.Config(os.getenv("API_KEY"))
-    main_interface(stdscr, cfg)
+    main_interface(stdscr)
 
 
 def launcher():
     wrapper(main)
+
 
 if __name__ == "__main__":
     launcher()

@@ -286,9 +286,7 @@ class MenuInterface (Interface):
                     selected = self.options[id - 1]
             if k == ord('\n'):
                 selected.callback()
+                break
             self.draw_options()
         self.screen.clear()
         self.screen.refresh()
-
-
-
