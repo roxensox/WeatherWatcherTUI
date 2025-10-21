@@ -54,5 +54,5 @@ Once the Weather window is displayed, you can press the `q` key to exit the prog
 - To Packaged and run globally using uv:
 ```bash
 uv tool install .
-weatherwatchertui
+weatherwatcher
 ```

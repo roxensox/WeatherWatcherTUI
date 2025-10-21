@@ -1,11 +1,15 @@
 import sys,os,time
 import _curses, curses
 import processing as p
-import text_logger
+try:
+    import text_logger
+except:
+    pass
 
 LAST_REFRESHED = time.time()
 
-LOG = text_logger.Log()
+if 'text_logger' in sys.modules:
+    LOG = text_logger.Log()
 
 def main_interface(stdscr: _curses.window, cfg):
     wp = p.WeatherProcessor()
@@ -51,7 +55,8 @@ def main_interface(stdscr: _curses.window, cfg):
             menu.add_option("Save Location")
             menu.add_option("Exit Program")
             menu.options[0].selected = True
-            #LOG.write(menu.options)
+            if 'text_logger' in sys.modules:
+                LOG.write(menu.options)
             menu.draw()
             menu.draw_options()
             menu.get_selection()
