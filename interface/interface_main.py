@@ -1,9 +1,12 @@
-import sys,os,time, interface.interface_callbacks
-import _curses, curses
-import processing.processing_main as p
+import sys,os,time
+import _curses, curses, sqlite3
+
 from dotenv import load_dotenv
 from pathlib import Path
-from interface.interface_classes import Interface, MainInterface, InfoInterface, MenuInterface, MenuOption
+
+from processing import processing_main as p
+from interface import interface_classes as ic
+from interface import interface_callbacks as cb
 
 
 try:
@@ -11,9 +14,8 @@ try:
 except:
     pass
 
-LAST_REFRESHED = time.time()
-
 load_dotenv(Path.home() / ".weatherwatcher" / ".env")
+
 CFG = p.Config(os.getenv("API_KEY"))
 
 if 'text_logger' in sys.modules:
@@ -21,20 +23,34 @@ if 'text_logger' in sys.modules:
 else:
     LOG = None
 
+
+def get_cached_location():
+    dbConn = cb.get_db_conn()
+    sql = "SELECT location FROM locations ORDER BY id DESC LIMIT 1"
+    results = dbConn.execute(sql).fetchone()
+    dbConn.close()
+    if results != None:
+        CFG.location = results[0]
+
+
 def main_interface(stdscr: _curses.window):
+    LAST_REFRESHED = time.time()
     wp = p.WeatherProcessor()
-    k = ''
-    mainscreen = MainInterface(screen=stdscr)
+    mainscreen = ic.MainInterface(screen=stdscr)
     mainscreen.screen.nodelay(True)
-    rough_data = get_valid_location(mainscreen)
+    get_cached_location()
+    rough_data = get_valid_location(mainscreen) if CFG.location == "" else CFG.get_weather()
     data = wp.load_data(rough_data)
     mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
-    LAST_REFRESHED = time.time()
-    refresh_interval = 5
     data = wp.load_data(CFG.get_weather())
     mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
     curses.curs_set(0)
+    main_loop(mainscreen, wp, LAST_REFRESHED)
 
+
+def main_loop(mainscreen, wp, last_refreshed):
+    refresh_interval = 5
+    k = ''
     # User can press q to close
     while k != ord('q'):
         k = mainscreen.screen.getch()
@@ -45,23 +61,19 @@ def main_interface(stdscr: _curses.window):
         now = time.time()
 
         # Gets new data at the specified interval
-        if now - LAST_REFRESHED >= refresh_interval:
+        if now - last_refreshed >= refresh_interval:
             data = wp.load_data(CFG.get_weather())
             mainscreen.display_location_info(data=wp.filtered_data, heading=wp.title)
-            LAST_REFRESHED = now
+            last_refreshed = now
 
         # User can press r to reselect their location
         if k == ord('r'):
-            mainscreen.screen.clear()
-            mainscreen.screen.refresh()
-            rd = get_valid_location(CFG, mainscreen)
-            data = wp.load_data(rd)
-            mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
-            LAST_REFRESHED = now
+            process_location_reset(mainscreen, wp)
+            last_refreshed = now
 
         # User can press m to view the options menu
         if k == ord('m'):
-            menu = MenuInterface(parent=mainscreen, heading = "Menu")
+            menu = ic.MenuInterface(parent=mainscreen, heading = "Menu")
             menu.add_option(SaveLocationOption)
             menu.add_option(ExitOption)
             menu.options[0].selected = True
@@ -71,6 +83,14 @@ def main_interface(stdscr: _curses.window):
             menu.draw_options()
             menu.get_selection()
         time.sleep(0.05)
+
+
+def process_location_reset(mainscreen, wp):
+        mainscreen.screen.clear()
+        mainscreen.screen.refresh()
+        rd = get_valid_location(mainscreen)
+        data = wp.load_data(rd)
+        mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
 
 
 def get_valid_location(main):
@@ -93,12 +113,12 @@ def get_valid_location(main):
     return rough_data
 
 
-SaveLocationOption = MenuOption(
+SaveLocationOption = ic.MenuOption(
     "Save Location",
-    callback = lambda : interface.interface_callbacks.save_location(CFG.location)
+    callback = lambda : cb.save_location(CFG.location)
 )
 
-ExitOption = MenuOption(
+ExitOption = ic.MenuOption(
     "Exit",
     callback = quit
 )

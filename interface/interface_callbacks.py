@@ -1,8 +1,10 @@
-import sqlite3
+import sqlite3, importlib.resources as resources
 
 
 def get_db_conn():
-    return sqlite3.connect("./ww.db")
+    root = __package__.split('.')[0]
+    db_path = resources.files(root).joinpath("ww.db")
+    return sqlite3.connect(db_path)
 
 
 def save_location(loc: str):
