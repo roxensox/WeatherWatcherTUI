@@ -1,58 +1,19 @@
-import sys,os,time
-import _curses, curses
-import processing as p
+import curses, _curses, sys, os, time
 
-LAST_REFRESHED = time.time()
-
-def main_interface(stdscr: _curses.window, cfg):
-    wp = p.WeatherProcessor()
-    k = ''
-    mainscreen = MainInterface(screen=stdscr)
-    mainscreen.screen.nodelay(True)
-    data = wp.load_data(get_valid_location(cfg, mainscreen))
-    mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
-    LAST_REFRESHED = time.time()
-    refresh_interval = 5
-    data = wp.load_data(cfg.get_weather())
-    mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
-    curses.curs_set(0)
-
-    while k != ord('q'):
-        k = mainscreen.screen.getch()
-        if curses.is_term_resized(mainscreen.height, mainscreen.width):
-            mainscreen.resize_handler()
-        now = time.time()
-        if now - LAST_REFRESHED >= refresh_interval:
-            data = wp.load_data(cfg.get_weather())
-            mainscreen.display_location_info(data=wp.filtered_data, heading=wp.title)
-            LAST_REFRESHED = now
-        if k == ord('r'):
-            mainscreen.screen.clear()
-            mainscreen.screen.refresh()
-            mainscreen.draw()
-            rd = get_valid_location(cfg, mainscreen)
-            data = wp.load_data(rd)
-            mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
-            LAST_REFRESHED = now
-        time.sleep(0.05)
-
-
-def get_valid_location(cfg, main):
-    '''
-    Prompts for input and validates it with the API
-    '''
-    rough_data = {}
-    while rough_data.get("location") == None:
-        location = main.get_location()
-        main.screen.addstr(1, 1, location)
-        main.draw()
-        cfg.set_location(location)
-        rough_data = cfg.get_weather()
-    return rough_data
-
+class MenuOption:
+    def __init__(self, content: str, callback, height: int = 0, width: int = 0):
+        self.id = None
+        self.height = height
+        self.width = width
+        self.content = content
+        self.selected = False
+        self.callback = callback
 
 
 class Interface:
+    '''
+    Generic class for UI elements
+    '''
     def __init__(self, screen: _curses.window, y: int =0, x: int =0, parent = None, heading: str = "")->None:
         self.screen = screen
         max_y, max_x = screen.getmaxyx()
@@ -124,7 +85,6 @@ class Interface:
         while cy < self.height - 2:
             cy += 1
             self.screen.addch(cy, 0, self.vertical)
-            #self.screen.addstr(cy, 1, f"{cy}")
             self.screen.addch(cy, self.width - 1, self.vertical)
         self.screen.addch(cy, 0, self.bl_corner)
         for i in range(1, self.width - 1):
@@ -184,6 +144,7 @@ class MainInterface (Interface):
         curses.meta(1)
         curses.start_color()
         curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
         screen.clear()
         self.draw()
 
@@ -235,3 +196,97 @@ class InfoInterface (Interface):
     def draw_info(self):
         self.draw()
         self.populate()
+
+
+class MenuInterface (Interface):
+    def __init__(self, parent: MainInterface, heading: str = "")->None:
+        # TODO: Figure out if this should be defined explicitly or calculated
+
+        self.height = 3
+        self.width = 20
+        self.anchor_y = 3
+        self.anchor_x = (parent.width // 2) - (self.width // 2)
+
+        # Creates a new window centered in the parent window
+        new_screen = curses.newwin(self.height, self.width, self.anchor_y, self.anchor_x)
+        super().__init__(screen=new_screen, parent=parent)
+        self.options = []
+        self.option_height = 3
+
+        # Defines the anchor point for menu options
+        self.option_y = 1
+        self.option_x = 1
+
+        self.heading = heading
+
+
+    def resize_for_options(self):
+        option_width = max([i.width for i in self.options])
+        self.width = option_width + 3
+        for i, o in enumerate(self.options):
+            o.width = option_width
+        self.screen.resize(self.height, self.width)
+
+
+    def add_option(self, option: MenuOption)->None:
+        option.id = len(self.options)
+        option.height = self.option_height
+        option.width = len(option.content) + 2
+        self.options.append(option)
+        self.height += self.option_height
+        self.resize_for_options()
+
+
+    def draw_options(self):
+        cx = self.option_x
+        cy = self.option_y
+        for option in self.options:
+            if option.selected:
+                self.screen.attron(curses.color_pair(2))
+            else:
+                self.screen.attroff(curses.color_pair(2))
+
+            # Draws top of box
+            self.screen.addch(cy, cx, self.ul_corner)
+            for i in range(option.width - 1):
+                self.screen.addch(self.horizontal)
+            self.screen.addch(self.ur_corner)
+            cy += 1
+            # Draws middle of box
+            self.screen.addch(cy, cx, self.vertical)
+            self.screen.addstr(option.content.center(option.width - 1))
+            self.screen.addch(self.vertical)
+            cy += 1
+            # Draws bottom of box
+            self.screen.addch(cy, cx, self.bl_corner)
+            for i in range(option.width - 1):
+                self.screen.addch(self.horizontal)
+            self.screen.addch(self.br_corner)
+            self.screen.refresh()
+            cy += 1
+
+
+    def get_selection(self):
+        k = ''
+        selected = [i for i in self.options if i.selected][0]
+        self.screen.keypad(True)
+        while k != ord('c'):
+            k = self.screen.getch()
+            if k == curses.KEY_DOWN:
+                if selected.id < len(self.options) - 1:
+                    id = selected.id
+                    self.options[id].selected = False
+                    self.options[id + 1].selected = True
+                    selected = self.options[id + 1]
+            if k == curses.KEY_UP:
+                if selected.id > 0:
+                    id = selected.id
+                    self.options[id].selected = False
+                    self.options[id - 1].selected = True
+                    selected = self.options[id - 1]
+            if k == ord('\n'):
+                selected.callback()
+                break
+            self.draw_options()
+        self.screen.clear()
+        self.screen.refresh()

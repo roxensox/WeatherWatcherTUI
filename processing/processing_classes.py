@@ -1,5 +1,4 @@
-import requests, curses, _curses
-from interface import MainInterface
+import requests
 
 
 class Config:
@@ -63,7 +62,9 @@ class Processor:
 
 
 class WeatherProcessor (Processor):
-    # Processor subclass for displaying WeatherAPI information
+    '''
+    Processor subclass for displaying WeatherAPI information
+    '''
     def __init__(self):
         super().__init__()
         self.title = "Weather"

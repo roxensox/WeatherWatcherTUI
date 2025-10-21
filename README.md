@@ -40,7 +40,7 @@ Once the Weather window is displayed, you can press the `q` key to exit the prog
 ## Planned Features
 - [x] Ability to change locations
 - [ ] Toggleable Fahrenheit/Celsius option
-- [ ] Ability to store previous locations and select them from a dropdown menu
+- [x] Ability to store previous locations and select them from a dropdown menu
 - [ ] Ability to add new APIs to request from and display data dynamically
 - [ ] Graphics to represent the weather conditions
 
@@ -54,5 +54,5 @@ Once the Weather window is displayed, you can press the `q` key to exit the prog
 - To Packaged and run globally using uv:
 ```bash
 uv tool install .
-weatherwatchertui
+weatherwatcher
 ```
