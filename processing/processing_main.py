@@ -1,5 +1,5 @@
 import requests, curses, _curses
-from interface import MainInterface
+from interface.interface_classes import MainInterface
 
 
 class Config:

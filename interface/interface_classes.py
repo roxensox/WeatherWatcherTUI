@@ -1,90 +1,19 @@
-import sys,os,time
-import _curses, curses
-import processing as p
-try:
-    import text_logger
-except:
-    pass
+import curses, _curses, sys, os, time
 
-LAST_REFRESHED = time.time()
-
-if 'text_logger' in sys.modules:
-    LOG = text_logger.Log()
-
-def main_interface(stdscr: _curses.window, cfg):
-    wp = p.WeatherProcessor()
-    k = ''
-    mainscreen = MainInterface(screen=stdscr)
-    mainscreen.screen.nodelay(True)
-    data = wp.load_data(get_valid_location(cfg, mainscreen))
-    mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
-    LAST_REFRESHED = time.time()
-    refresh_interval = 5
-    data = wp.load_data(cfg.get_weather())
-    mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
-    curses.curs_set(0)
-
-    # User can press q to close
-    while k != ord('q'):
-        k = mainscreen.screen.getch()
-
-        if curses.is_term_resized(mainscreen.height, mainscreen.width):
-            mainscreen.resize_handler()
-
-        now = time.time()
-
-        # Gets new data at the specified interval
-        if now - LAST_REFRESHED >= refresh_interval:
-            data = wp.load_data(cfg.get_weather())
-            mainscreen.display_location_info(data=wp.filtered_data, heading=wp.title)
-            LAST_REFRESHED = now
-
-        # User can press r to reselect their location
-        if k == ord('r'):
-            mainscreen.screen.clear()
-            mainscreen.screen.refresh()
-            rd = get_valid_location(cfg, mainscreen)
-            data = wp.load_data(rd)
-            mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
-            LAST_REFRESHED = now
-
-        # User can press m to view the options menu
-        if k == ord('m'):
-            menu = MenuInterface(parent=mainscreen, heading = "Menu")
-            menu.add_option("Reset")
-            menu.add_option("Save Location")
-            menu.add_option("Exit Program")
-            menu.options[0].selected = True
-            if 'text_logger' in sys.modules:
-                LOG.write(menu.options)
-            menu.draw()
-            menu.draw_options()
-            menu.get_selection()
-        time.sleep(0.05)
-
-
-def get_valid_location(cfg, main):
-    '''
-    Prompts for input and validates it with the API
-    '''
-    rough_data = {}
-    while rough_data.get("location") == None:
-        location = main.get_location()
-        if location == "":
-            main.screen.clear()
-            main.screen.addstr(0, 0, "No location provided... exiting.")
-            main.screen.refresh()
-            curses.curs_set(0)
-            time.sleep(1)
-            quit()
-        main.draw()
-        cfg.set_location(location)
-        rough_data = cfg.get_weather()
-    return rough_data
-
+class MenuOption:
+    def __init__(self, content: str, callback, height: int = 0, width: int = 0):
+        self.id = None
+        self.height = height
+        self.width = width
+        self.content = content
+        self.selected = False
+        self.callback = callback
 
 
 class Interface:
+    '''
+    Generic class for UI elements
+    '''
     def __init__(self, screen: _curses.window, y: int =0, x: int =0, parent = None, heading: str = "")->None:
         self.screen = screen
         max_y, max_x = screen.getmaxyx()
@@ -299,14 +228,11 @@ class MenuInterface (Interface):
         self.screen.resize(self.height, self.width)
 
 
-    def add_option(self, name: str)->None:
-        new_option = MenuOption( 
-            height = self.option_height,
-            width = len(name) + 4,
-            content = name,
-            id = len(self.options)
-        )
-        self.options.append(new_option)
+    def add_option(self, option: MenuOption)->None:
+        option.id = len(self.options)
+        option.height = self.option_height
+        option.width = len(option.content) + 2
+        self.options.append(option)
         self.height += self.option_height
         self.resize_for_options()
 
@@ -358,17 +284,11 @@ class MenuInterface (Interface):
                     self.options[id].selected = False
                     self.options[id - 1].selected = True
                     selected = self.options[id - 1]
+            if k == ord('\n'):
+                selected.callback()
             self.draw_options()
         self.screen.clear()
         self.screen.refresh()
 
 
 
-class MenuOption:
-    def __init__(self, height, width, content, id):
-        self.id = id
-        self.height = height
-        self.width = width
-        self.content = content
-        self.selected = False
-        self.callback = None # TODO: Add in a callback function associated with the option
