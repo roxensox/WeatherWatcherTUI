@@ -8,6 +8,7 @@ Weather Watcher TUI periodically queries WeatherAPI.com for updates and displays
 - Lightweight curses-based TUI
 - Customizable data fields (toggle keys in `processing.py` -> `Config.keys`
 - UTF-8 box-drawing UI
+- Saves user locations in a SQLite database for easy repeat usage
 - Built with uv for easy installation and environment management
 
 ## Dependencies
@@ -39,8 +40,8 @@ Once the Weather window is displayed, you can press the `q` key to exit the prog
 
 ## Planned Features
 - [x] Ability to change locations
-- [ ] Toggleable Fahrenheit/Celsius option
 - [x] Ability to store previous locations and select them from a dropdown menu
+- [ ] Toggleable Fahrenheit/Celsius option
 - [ ] Ability to add new APIs to request from and display data dynamically
 - [ ] Graphics to represent the weather conditions
 
@@ -51,7 +52,7 @@ Once the Weather window is displayed, you can press the `q` key to exit the prog
 
 ## Developer Notes
 - Update the refresh interval or displayed keys in `processing.py` -> `Config`
-- To Packaged and run globally using uv:
+- To package and run globally using uv:
 ```bash
 uv tool install .
 weatherwatcher

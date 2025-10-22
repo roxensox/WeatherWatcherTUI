@@ -1,6 +1,9 @@
 import curses, _curses, sys, os, time
 
 class MenuOption:
+    '''
+    Supplement class for the MenuInterface, makes presenting options easier
+    '''
     def __init__(self, content: str, callback, height: int = 0, width: int = 0):
         self.id = None
         self.height = height
@@ -179,6 +182,10 @@ class MainInterface (Interface):
 
 
 class InfoInterface (Interface):
+    #TODO: Improve the presentation of this element, maybe center it and have columns
+    '''
+    Subclass to display data retrieved from the API
+    '''
     def __init__(self, screen: _curses.window, data: list, heading: str, parent: MainInterface)->None:
         super().__init__(screen)
         self.data = data
@@ -200,8 +207,7 @@ class InfoInterface (Interface):
 
 class MenuInterface (Interface):
     def __init__(self, parent: MainInterface, heading: str = "")->None:
-        # TODO: Figure out if this should be defined explicitly or calculated
-
+        #TODO: Figure out if this should be defined explicitly or calculated
         self.height = 3
         self.width = 20
         self.anchor_y = 3
