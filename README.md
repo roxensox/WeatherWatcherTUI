@@ -45,6 +45,11 @@ Once the Weather window is displayed, you can press the `q` key to exit the prog
 - [ ] Ability to add new APIs to request from and display data dynamically
 - [ ] Graphics to represent the weather conditions
 
+### Higher-Level Plans
+- [ ] Make this a more general API reader
+- [ ] Generate config from API endpoint (should be easy with a JSON response)
+- [ ] Make a menu to edit the config from the TUI
+
 ## Examples
 
 ### Basic weather view
