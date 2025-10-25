@@ -155,7 +155,18 @@ class MainInterface (Interface):
     def display_location_info(self, data: dict, heading: str)->None:
         self.screen.clear()
         self.draw()
-        screen = curses.newwin(len(data) + 3, max([len(": ".join(i)) for i in data]) + 2, 1, 1)
+
+        screen_height = len(data) + 3
+        screen_width = max([len(": ".join(i)) for i in data]) + 2
+        anchor_y = (self.height // 2) - (screen_height // 2)
+        anchor_x = (self.width // 2) - (screen_width // 2)
+        screen = curses.newwin(
+            screen_height, 
+            screen_width, 
+            anchor_y, 
+            anchor_x,
+        )
+
         infoScreen1 = InfoInterface(screen=screen, data=data, heading=heading, parent=self)
         infoScreen1.draw_info()
         self.screen.move(self.height - 1, 0)
@@ -184,7 +195,6 @@ class MainInterface (Interface):
 
 
 class InfoInterface (Interface):
-    #TODO: Improve the presentation of this element, maybe center it and have columns
     '''
     Subclass to display data retrieved from the API
     '''
