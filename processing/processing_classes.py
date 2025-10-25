@@ -2,9 +2,11 @@ import requests
 
 
 class Config:
-    def __init__(self, API_Key: str)->None:
+    def __init__(self, API_Key: str, log=None)->None:
         self.API_Key = API_Key
         self.location = ""
+        self.saved_locations = 0
+        self.log = log
 
 
     def set_location(self, location: str)->None:
@@ -28,6 +30,13 @@ class Config:
     def process_location_reset(self, mainscreen, location):
         data = self.processor.load_data(self.get_weather())
         mainscreen.display_location_info(data=self.processor.filtered_data, heading="Weather")
+
+
+    def get_saved_locations(self, dbConn):
+        self.saved_locations = dbConn.execute("SELECT COUNT(*) FROM locations").fetchone()[0]
+        if self.log != None:
+            self.log.write(f"Saved: {self.saved_locations}")
+        dbConn.close()
 
 
 class Processor:

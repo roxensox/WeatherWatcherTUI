@@ -297,6 +297,8 @@ class MenuInterface (Interface):
             if k == ord('\n'):
                 if log != None:
                     log.write(selected.content)
+                self.screen.clear()
+                self.screen.refresh()
                 selected.callback()
                 break
             self.draw_options()

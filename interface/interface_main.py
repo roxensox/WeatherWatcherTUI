@@ -9,16 +9,6 @@ from processing import processing_main as p
 from interface_config import CFG
 
 
-try:
-    import utils.text_logger as log
-    LOG = log.Log()
-    print("Log initialized")
-except Exception as e:
-    print(e)
-    LOG = None
-    pass
-
-
 def get_cached_location():
     dbConn = cb.get_db_conn()
     sql = "SELECT location FROM locations ORDER BY id DESC LIMIT 1"
@@ -35,6 +25,7 @@ def main_interface(stdscr: _curses.window):
     mainscreen.screen.nodelay(True)
     CFG.mainScreen = mainscreen
     CFG.processor = wp
+    CFG.get_saved_locations(cb.get_db_conn())
     get_cached_location()
     rough_data = get_valid_location(mainscreen) if CFG.location == "" else CFG.get_weather()
     data = CFG.processor.load_data(rough_data)
@@ -50,6 +41,7 @@ def main_loop(mainscreen, wp, last_refreshed):
     k = ''
     # User can press q to close
     while k != ord('q'):
+        CFG.get_saved_locations(cb.get_db_conn())
         k = mainscreen.screen.getch()
 
         if curses.is_term_resized(mainscreen.height, mainscreen.width):
@@ -68,10 +60,10 @@ def main_loop(mainscreen, wp, last_refreshed):
             mainscreen.screen.clear()
             mainscreen.screen.refresh()
             mainscreen.draw()
-            new_loc = get_valid_location(mainscreen)
+            new_loc = get_valid_location(mainscreen, curr_loc = CFG.location)
             CFG.process_location_reset(mainscreen, new_loc)
-            if LOG != None:
-                LOG.write(new_loc)
+            if CFG.log != None:
+                CFG.log.write(new_loc)
             last_refreshed = now
 
 
@@ -79,20 +71,21 @@ def main_loop(mainscreen, wp, last_refreshed):
         if k == ord('m'):
             menu = ic.MenuInterface(parent=mainscreen, heading = "Menu")
             menu.add_option(SaveLocationOption)
-            menu.add_option(ChooseLocationOption)
+            if CFG.saved_locations > 0:
+                menu.add_option(ChooseLocationOption)
             menu.add_option(ExitOption)
             for opt in menu.options:
                 opt.selected = False
             menu.options[0].selected = True
-            if LOG:
-                LOG.write([i.content for i in menu.options])
+            if CFG.log:
+                CFG.log.write([i.content for i in menu.options])
             menu.draw()
             menu.draw_options()
-            menu.get_selection(LOG)
+            menu.get_selection(CFG.log)
         time.sleep(0.05)
 
 
-def get_valid_location(main):
+def get_valid_location(main, curr_loc = None):
     '''
     Prompts for input and validates it with the API
     '''
@@ -101,15 +94,18 @@ def get_valid_location(main):
         location = main.get_location()
         if location == "":
             main.screen.clear()
-            main.screen.addstr(0, 0, "No location provided... exiting.")
-            main.screen.refresh()
-            curses.curs_set(0)
-            time.sleep(1)
-            quit()
+            if curr_loc == None:
+                main.screen.addstr(0, 0, "No location provided... exiting.")
+                main.screen.refresh()
+                curses.curs_set(0)
+                time.sleep(1)
+                quit()
+            else:
+                location = curr_loc
         main.draw()
         CFG.set_location(location)
         rough_data = CFG.get_weather()
-    return location
+    return rough_data
 
 
 SaveLocationOption = ic.MenuOption(
@@ -126,6 +122,6 @@ ExitOption = ic.MenuOption(
 
 ChooseLocationOption = ic.MenuOption(
     "Choose Location",
-    callback = lambda : cb.choose_location(CFG.mainScreen, LOG)
+    callback = lambda : cb.choose_location(CFG.mainScreen, CFG.log)
 )
 

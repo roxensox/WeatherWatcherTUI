@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 # Populated database
-interface/ww.db
+*.db
 
 # Distribution / packaging
 .Python
