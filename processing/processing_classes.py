@@ -25,6 +25,10 @@ class Config:
         resp.close()
         return out
 
+    def process_location_reset(self, mainscreen, location):
+        data = self.processor.load_data(self.get_weather())
+        mainscreen.display_location_info(data=self.processor.filtered_data, heading="Weather")
+
 
 class Processor:
     '''

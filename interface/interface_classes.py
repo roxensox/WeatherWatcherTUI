@@ -153,6 +153,8 @@ class MainInterface (Interface):
 
 
     def display_location_info(self, data: dict, heading: str)->None:
+        self.screen.clear()
+        self.draw()
         screen = curses.newwin(len(data) + 3, max([len(": ".join(i)) for i in data]) + 2, 1, 1)
         infoScreen1 = InfoInterface(screen=screen, data=data, heading=heading, parent=self)
         infoScreen1.draw_info()
@@ -227,7 +229,7 @@ class MenuInterface (Interface):
 
 
     def resize_for_options(self):
-        option_width = max([i.width for i in self.options])
+        option_width = max(len(self.heading) + 2, max([i.width for i in self.options]))
         self.width = option_width + 3
         for i, o in enumerate(self.options):
             o.width = option_width
@@ -258,11 +260,13 @@ class MenuInterface (Interface):
                 self.screen.addch(self.horizontal)
             self.screen.addch(self.ur_corner)
             cy += 1
+
             # Draws middle of box
             self.screen.addch(cy, cx, self.vertical)
             self.screen.addstr(option.content.center(option.width - 1))
             self.screen.addch(self.vertical)
             cy += 1
+
             # Draws bottom of box
             self.screen.addch(cy, cx, self.bl_corner)
             for i in range(option.width - 1):
@@ -272,7 +276,7 @@ class MenuInterface (Interface):
             cy += 1
 
 
-    def get_selection(self):
+    def get_selection(self, log = None):
         k = ''
         selected = [i for i in self.options if i.selected][0]
         self.screen.keypad(True)
@@ -291,6 +295,8 @@ class MenuInterface (Interface):
                     self.options[id - 1].selected = True
                     selected = self.options[id - 1]
             if k == ord('\n'):
+                if log != None:
+                    log.write(selected.content)
                 selected.callback()
                 break
             self.draw_options()

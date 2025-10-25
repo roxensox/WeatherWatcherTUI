@@ -1,27 +1,22 @@
 import sys,os,time
 import _curses, curses, sqlite3
 
-from dotenv import load_dotenv
-from pathlib import Path
 
-from processing import processing_main as p
 from interface import interface_classes as ic
 from interface import interface_callbacks as cb
+from processing import processing_main as p
+
+from interface_config import CFG
 
 
 try:
-    import text_logger
-except:
-    pass
-
-load_dotenv(Path.home() / ".weatherwatcher" / ".env")
-
-CFG = p.Config(os.getenv("API_KEY"))
-
-if 'text_logger' in sys.modules:
-    LOG = text_logger.Log()
-else:
+    import utils.text_logger as log
+    LOG = log.Log()
+    print("Log initialized")
+except Exception as e:
+    print(e)
     LOG = None
+    pass
 
 
 def get_cached_location():
@@ -38,14 +33,16 @@ def main_interface(stdscr: _curses.window):
     wp = p.WeatherProcessor()
     mainscreen = ic.MainInterface(screen=stdscr)
     mainscreen.screen.nodelay(True)
+    CFG.mainScreen = mainscreen
+    CFG.processor = wp
     get_cached_location()
     rough_data = get_valid_location(mainscreen) if CFG.location == "" else CFG.get_weather()
-    data = wp.load_data(rough_data)
-    mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
-    data = wp.load_data(CFG.get_weather())
-    mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
+    data = CFG.processor.load_data(rough_data)
+    mainscreen.display_location_info(data=CFG.processor.filtered_data, heading="Weather")
+    data = CFG.processor.load_data(CFG.get_weather())
+    mainscreen.display_location_info(data=CFG.processor.filtered_data, heading="Weather")
     curses.curs_set(0)
-    main_loop(mainscreen, wp, LAST_REFRESHED)
+    main_loop(mainscreen, CFG.processor, LAST_REFRESHED)
 
 
 def main_loop(mainscreen, wp, last_refreshed):
@@ -68,29 +65,31 @@ def main_loop(mainscreen, wp, last_refreshed):
 
         # User can press r to reselect their location
         if k == ord('r'):
-            process_location_reset(mainscreen, wp)
+            mainscreen.screen.clear()
+            mainscreen.screen.refresh()
+            mainscreen.draw()
+            new_loc = get_valid_location(mainscreen)
+            CFG.process_location_reset(mainscreen, new_loc)
+            if LOG != None:
+                LOG.write(new_loc)
             last_refreshed = now
+
 
         # User can press m to view the options menu
         if k == ord('m'):
             menu = ic.MenuInterface(parent=mainscreen, heading = "Menu")
             menu.add_option(SaveLocationOption)
+            menu.add_option(ChooseLocationOption)
             menu.add_option(ExitOption)
+            for opt in menu.options:
+                opt.selected = False
             menu.options[0].selected = True
             if LOG:
-                LOG.write(menu.options)
+                LOG.write([i.content for i in menu.options])
             menu.draw()
             menu.draw_options()
-            menu.get_selection()
+            menu.get_selection(LOG)
         time.sleep(0.05)
-
-
-def process_location_reset(mainscreen, wp):
-        mainscreen.screen.clear()
-        mainscreen.screen.refresh()
-        rd = get_valid_location(mainscreen)
-        data = wp.load_data(rd)
-        mainscreen.display_location_info(data=wp.filtered_data, heading="Weather")
 
 
 def get_valid_location(main):
@@ -110,7 +109,7 @@ def get_valid_location(main):
         main.draw()
         CFG.set_location(location)
         rough_data = CFG.get_weather()
-    return rough_data
+    return location
 
 
 SaveLocationOption = ic.MenuOption(
@@ -118,7 +117,15 @@ SaveLocationOption = ic.MenuOption(
     callback = lambda : cb.save_location(CFG.location)
 )
 
+
 ExitOption = ic.MenuOption(
     "Exit",
     callback = quit
 )
+
+
+ChooseLocationOption = ic.MenuOption(
+    "Choose Location",
+    callback = lambda : cb.choose_location(CFG.mainScreen, LOG)
+)
+
