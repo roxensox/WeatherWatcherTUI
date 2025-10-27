@@ -153,6 +153,9 @@ class MainInterface (Interface):
 
 
     def display_location_info(self, data: dict, heading: str)->None:
+        '''
+        Builds and draws the data display window
+        '''
         self.screen.clear()
         self.draw()
 
@@ -177,10 +180,10 @@ class MainInterface (Interface):
         '''
         Prompts the user for location input and returns it as a string
         '''
+        #FIXME: Should have a good, safe default
         # Arguments here are arbitrary, can be modified to taste
         location_window = self.make_window(4, 50, 1, 1)
         location_window.draw()
-        # The coordinates here will depend on arguments to make_window; it just centers the text
         location_window.screen.refresh()
         prompt = "Set Location: "
         lbound = len(prompt) + 1

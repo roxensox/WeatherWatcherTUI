@@ -9,6 +9,8 @@ from processing import processing_main as p
 from interface_config import CFG
 
 
+#TODO:  Change queries that access the locations table to update access time for retrieved elements
+#       The most recently accessed element should be the cached one, not the most recently added
 def get_cached_location():
     dbConn = cb.get_db_conn()
     sql = "SELECT location FROM locations ORDER BY id DESC LIMIT 1"
@@ -19,20 +21,37 @@ def get_cached_location():
 
 
 def main_interface(stdscr: _curses.window):
+    # Initializes refresh time
     LAST_REFRESHED = time.time()
+
+    # Gets the weather processor
     wp = p.WeatherProcessor()
+
+    # Creates the main screen
     mainscreen = ic.MainInterface(screen=stdscr)
+
+    # Makes it so the data can update while also listening for input
     mainscreen.screen.nodelay(True)
+
+    # Adds elements to config
     CFG.mainScreen = mainscreen
     CFG.processor = wp
+
+    # Loads persistent data into config
     CFG.get_saved_locations(cb.get_db_conn())
     get_cached_location()
+
+    # Calls the API for data
     rough_data = get_valid_location(mainscreen) if CFG.location == "" else CFG.get_weather()
+
+    # Processes data through weather processor and writes it to the screen
     data = CFG.processor.load_data(rough_data)
     mainscreen.display_location_info(data=CFG.processor.filtered_data, heading="Weather")
-    data = CFG.processor.load_data(CFG.get_weather())
-    mainscreen.display_location_info(data=CFG.processor.filtered_data, heading="Weather")
+
+    # Hides the cursor
     curses.curs_set(0)
+
+    # Runs the input loop
     main_loop(mainscreen, CFG.processor, LAST_REFRESHED)
 
 
