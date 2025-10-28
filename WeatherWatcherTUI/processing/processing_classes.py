@@ -1,4 +1,5 @@
-import requests
+import requests, json
+import importlib.resources as resources
 
 
 class Config:
@@ -81,55 +82,11 @@ class WeatherProcessor (Processor):
     def __init__(self):
         super().__init__()
         self.title = "Weather"
-        self.prefs = {
-            "location": {
-                "name":(True,"City"),
-                "region":(True,"State/Province"),
-                "country":(True,"Country"),
-                "lat":(False,"Latitude"),
-                "lon":(False,"Longitude"),
-                "tz_id":(True,"Timezone"),
-                "localtime_epoch":(False,"Local Time UTC"),
-                "localtime":(True,"Local Time"),
-            },
-            "current":{
-                "condition": {
-                    "text":(True,"Condition"),
-                    "icon":(False,"Icon URL"),
-                    "code":(False,"Condition Code"),
-                },
-                "last_updated_epoch":(False,"Last Updated UTC"),
-                "last_updated":(True,"Last Updated"),
-                "temp_c":(True,"Temperature C"),
-                "temp_f":(True,"Temperature F"),
-                "is_day":(True,"Daytime"),
-                "wind_mph":(True,"Wind Speed (MPH)"),
-                "wind_kph":(False,"Wind Speed (KPH)"),
-                "wind_degree":(False,"Wind Degree"),
-                "wind_dir":(True,"Wind Direction"),
-                "pressure_mb":(False,"Pressure (mb)"),
-                "pressure_in":(False,"Pressure (in)"),
-                "precip_mm":(False,"Precipitation (mm)"),
-                "precip_in":(True,"Precipitation (in)"),
-                "humidity":(True,"Humidity"),
-                "cloud":(False,"Cloud Cover"),
-                "feelslike_c":(False,"Feels Like C"),
-                "feelslike_f":(True,"Feels Like F"),
-                "windchill_c":(False,"Windchill C"),
-                "windchill_f":(True,"Windchill F"),
-                "heatindex_c":(False,"Heat Index C"),
-                "heatindex_f":(True,"Heat Index F"),
-                "dewpoint_c":(False,"Dew Point C"),
-                "dewpoint_f":(True,"Dew Point F"),
-                "vis_km":(False,"Visibility (km)"),
-                "vis_miles":(True,"Visibility (mi)"),
-                "uv":(True,"UV Index"),
-                "gust_mph":(True,"Gust (MPH)"),
-                "gust_kph":(False,"Gust (KPH)"),
-                "short_rad":(False,"Short Rad"),
-                "diff_rad":(False,"Diff Rad"),
-                "dni":(False,"DNI"),
-                "gti":(False,"GTI"),
-            },
-    }
-
+        root = __package__.split('.')[0]
+        cfg_path = resources.files(root).joinpath("../configs/api.json")
+        with open(cfg_path, "r") as api_configs:
+            data = json.load(api_configs)
+        self.prefs = {}
+        for k in data.keys():
+            if self.title.lower() in k:
+                self.prefs = data[k]

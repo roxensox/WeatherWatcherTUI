@@ -8,7 +8,7 @@ authors = [{ name = "Ryan Hoveskeland", email = "ryanhoveskeland@protonmail.com"
 dependencies = ["requests", "python-dotenv"]
 
 [project.scripts]
-weatherwatcher = "main:launcher"
+weatherwatcher = "WeatherWatcherTUI.main:launcher"
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]
@@ -19,7 +19,8 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["*"]
+include = ["WeatherWatcherTUI*"]
 
 [tool.setuptools.package-data]
 "interface" = ["ww.db"]
+"configs" = ["api.json"]

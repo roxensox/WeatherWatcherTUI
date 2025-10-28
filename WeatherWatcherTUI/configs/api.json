@@ -1,0 +1,182 @@
+{
+    "http://api.weatherapi.com/v1/current.json": {
+        "location": {
+            "name": [
+                true,
+                "City"
+            ],
+            "region": [
+                true,
+                "State/Province"
+            ],
+            "country": [
+                true,
+                "Country"
+            ],
+            "lat": [
+                false,
+                "Latitude"
+            ],
+            "lon": [
+                false,
+                "Longitude"
+            ],
+            "tz_id": [
+                true,
+                "Timezone"
+            ],
+            "localtime_epoch": [
+                false,
+                "Local Time UTC"
+            ],
+            "localtime": [
+                true,
+                "Local Time"
+            ]
+        },
+        "current": {
+            "condition": {
+                "text": [
+                    true,
+                    "Condition"
+                ],
+                "icon": [
+                    false,
+                    "Icon URL"
+                ],
+                "code": [
+                    false,
+                    "Condition Code"
+                ]
+            },
+            "last_updated_epoch": [
+                false,
+                "Last Updated UTC"
+            ],
+            "last_updated": [
+                true,
+                "Last Updated"
+            ],
+            "temp_c": [
+                true,
+                "Temperature C"
+            ],
+            "temp_f": [
+                true,
+                "Temperature F"
+            ],
+            "is_day": [
+                true,
+                "Daytime"
+            ],
+            "wind_mph": [
+                true,
+                "Wind Speed (MPH)"
+            ],
+            "wind_kph": [
+                false,
+                "Wind Speed (KPH)"
+            ],
+            "wind_degree": [
+                false,
+                "Wind Degree"
+            ],
+            "wind_dir": [
+                true,
+                "Wind Direction"
+            ],
+            "pressure_mb": [
+                false,
+                "Pressure (mb)"
+            ],
+            "pressure_in": [
+                false,
+                "Pressure (in)"
+            ],
+            "precip_mm": [
+                false,
+                "Precipitation (mm)"
+            ],
+            "precip_in": [
+                true,
+                "Precipitation (in)"
+            ],
+            "humidity": [
+                true,
+                "Humidity"
+            ],
+            "cloud": [
+                false,
+                "Cloud Cover"
+            ],
+            "feelslike_c": [
+                false,
+                "Feels Like C"
+            ],
+            "feelslike_f": [
+                true,
+                "Feels Like F"
+            ],
+            "windchill_c": [
+                false,
+                "Windchill C"
+            ],
+            "windchill_f": [
+                true,
+                "Windchill F"
+            ],
+            "heatindex_c": [
+                false,
+                "Heat Index C"
+            ],
+            "heatindex_f": [
+                true,
+                "Heat Index F"
+            ],
+            "dewpoint_c": [
+                false,
+                "Dew Point C"
+            ],
+            "dewpoint_f": [
+                true,
+                "Dew Point F"
+            ],
+            "vis_km": [
+                false,
+                "Visibility (km)"
+            ],
+            "vis_miles": [
+                true,
+                "Visibility (mi)"
+            ],
+            "uv": [
+                true,
+                "UV Index"
+            ],
+            "gust_mph": [
+                true,
+                "Gust (MPH)"
+            ],
+            "gust_kph": [
+                false,
+                "Gust (KPH)"
+            ],
+            "short_rad": [
+                false,
+                "Short Rad"
+            ],
+            "diff_rad": [
+                false,
+                "Diff Rad"
+            ],
+            "dni": [
+                false,
+                "DNI"
+            ],
+            "gti": [
+                false,
+                "GTI"
+            ]
+        }
+    }
+}

@@ -1,6 +1,6 @@
 import sqlite3, importlib.resources as resources
 from interface.interface_classes import MenuInterface, MenuOption
-from interface_config import CFG
+from interface.interface_config import CFG
 
 
 def get_db_conn()->sqlite3.Connection:

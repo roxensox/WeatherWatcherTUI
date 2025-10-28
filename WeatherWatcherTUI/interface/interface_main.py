@@ -1,4 +1,4 @@
-import sys,os,time
+import sys, os, time
 import _curses, curses, sqlite3
 
 
@@ -6,7 +6,7 @@ from interface import interface_classes as ic
 from interface import interface_callbacks as cb
 from processing import processing_main as p
 
-from interface_config import CFG
+from interface.interface_config import CFG
 
 
 #TODO:  Change queries that access the locations table to update access time for retrieved elements
