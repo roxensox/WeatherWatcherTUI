@@ -3,11 +3,12 @@ import importlib.resources as resources
 
 
 class Config:
-    def __init__(self, API_Key: str, log=None)->None:
+    def __init__(self, API_Key: str, log=None, http_client=None)->None:
         self.API_Key = API_Key
         self.location = ""
         self.saved_locations = 0
         self.log = log
+        self.http_client = http_client or requests
 
 
     def set_location(self, location: str)->None:
@@ -17,16 +18,27 @@ class Config:
         self.location = location
 
 
+    def build_url(self)->str:
+        return f"http://api.weatherapi.com/v1/current.json?key={self.API_Key}&q={self.location}&aqi=no"
+
+
     def get_weather(self)->dict:
         '''
         Makes a request to the weather API for the current weather in the specified area, returns it as a dictionary
         '''
-        resp = requests.get(f"http://api.weatherapi.com/v1/current.json?key={self.API_Key}&q={self.location}&aqi=no")
+        url = self.build_url()
+        resp = self.request_weather(url)
         out = {}
         if resp.status_code <= 299:
             out = resp.json()
         resp.close()
         return out
+
+
+    def request_weather(self, url):
+        resp = self.http_client.get(url)
+        return resp
+
 
     def process_location_reset(self, mainscreen, location):
         data = self.processor.load_data(self.get_weather())
@@ -82,6 +94,8 @@ class WeatherProcessor (Processor):
     def __init__(self):
         super().__init__()
         self.title = "Weather"
+
+        # Imports preferences from a json file for modular preferences
         root = __package__.split('.')[0]
         cfg_path = resources.files(root).joinpath("../configs/api.json")
         with open(cfg_path, "r") as api_configs:
