@@ -85,7 +85,7 @@ def test_get_weather_handles_unexpected_json_shapes(payload):
     "location,expected_substrings",
     [
         ("58401",      ["key=DUMMY_KEY", "q=58401"]),       # URL_T1
-        ("Los Angeles",["key=DUMMY_KEY", "q=Los Angeles"]), # URL_T2
+        ("Los Angeles",["key=DUMMY_KEY", "q=Los+Angeles"]), # URL_T2
         ("",           ["key=DUMMY_KEY", "q="]),            # URL_T3
     ],
     ids=["URL_T1", "URL_T2", "URL_T3"],

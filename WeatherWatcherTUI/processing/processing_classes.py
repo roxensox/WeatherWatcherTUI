@@ -1,5 +1,6 @@
 import requests, json
 import importlib.resources as resources
+from urllib.parse import urlencode
 
 
 class Config:
@@ -19,7 +20,13 @@ class Config:
 
 
     def build_url(self)->str:
-        return f"http://api.weatherapi.com/v1/current.json?key={self.API_Key}&q={self.location}&aqi=no"
+        params = {
+            "key":self.API_Key,
+            "q":self.location,
+            "aqi":"no",
+        }
+        url = f"http://api.weatherapi.com/v1/current.json{urlencode(params)}"
+        return url
 
 
     def get_weather(self)->dict:
