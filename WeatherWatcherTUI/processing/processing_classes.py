@@ -43,16 +43,25 @@ class Config:
 
 
     def request_weather(self, url):
+        '''
+        Makes the request to the HTTP client and returns the response
+        '''
         resp = self.http_client.get(url)
         return resp
 
 
     def process_location_reset(self, mainscreen, location):
+        '''
+        Applies a change to the location done in the TUI
+        '''
         data = self.processor.load_data(self.get_weather())
         mainscreen.display_location_info(data=self.processor.filtered_data, heading="Weather")
 
 
     def get_saved_locations(self, dbConn):
+        '''
+        Gets the number of saved locations from the database
+        '''
         self.saved_locations = dbConn.execute("SELECT COUNT(*) FROM locations").fetchone()[0]
         if self.log != None:
             self.log.write(f"Saved: {self.saved_locations}")
@@ -80,17 +89,19 @@ class Processor:
         '''
         Filters data recursively and will work on any JSON with compatible prefs
         '''
-
         for k in prefs.keys():
             # Checks for corresponding value in data dict, skips key if it's not there
             if data.get(k) == None:
                 continue
+
             # Filters recursively if the value is a dictionary
             if type(prefs[k]) == dict:
                 history = self.filter_data_recursive(prefs[k], data[k], history)
+
             # Adds value to output if it's toggled on
             elif prefs[k][0] == True:
                 history.append((prefs[k][1], str(data[k])))
+
         return history
 
 
@@ -105,9 +116,12 @@ class WeatherProcessor (Processor):
         # Imports preferences from a json file for modular preferences
         root = __package__.split('.')[0]
         cfg_path = resources.files(root).joinpath("../configs/api.json")
+
         with open(cfg_path, "r") as api_configs:
             data = json.load(api_configs)
+
         self.prefs = {}
+
         for k in data.keys():
             if self.title.lower() in k:
                 self.prefs = data[k]
